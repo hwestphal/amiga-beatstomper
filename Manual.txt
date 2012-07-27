@@ -1,0 +1,137 @@
+* BeatStomper III V1.0 by Harald Westphal *
+
+Anleitung
+---------
+
+Hard- und Softwarevorraussetzungen:
+
+BeatStomper III benötigt OS2.04 oder höher. Unter OS1.3 ist es leider nicht
+mehr lauffähig. Das Programm kann auch mit nur 512K Speicher gestartet werden.
+Allerdings ist es von Vorteil, wenn Sie über reichlich Chip-Memory verfügen, da
+Sound-Samples einiges an Speicher schlucken.
+Das Programm setzt voraus, daß das "serial.device" im DEVS:- sowie die
+"asl.library" im LIBS:-Verzeichnis vorhanden ist. Andernfalls kann BeatStomper
+nicht gestartet werden. Im Normalfall befinden sich diese Dateien auf Ihrer
+Workbench-Diskette, so daß Sie sich darum nicht zu kümmern brauchen.
+
+
+Was BeatStomper III ist:
+
+BeatStomper III simuliert einen Drum-Computer. D.h., es ermöglicht Ihnen, nach
+selbst definierten rhythmischen Mustern Sound-Samples (vorzugsweise Schlagzeug-
+Sounds) auf den vier Tonkanälen des Amigas abzuspielen. Es kann dabei von
+externen MIDI-Geräten synchronisiert werden, so daß Sie Ihren Amiga als
+preiswerte Rhythmusmaschine in ein MIDI-Netzwerk einbinden können.
+Die oben erwähnten Rhythmus-Muster, Pattern genannt, können zu einem Song
+verknüpft werden, so daß umfang- und abwechlungsreiche Arrangements möglich
+sind.
+
+
+Die Bedienung:
+
+Im folgenden werden die Namen der Gadgets genannt und danach deren Funktion:
+Cut:        Schneidet das aktuelle Pattern aus.
+Copy:       Kopiert das aktuelle Pattern in den Kopier-Puffer.
+Paste:      Kopiert den Kopier-Puffer ins aktuelle Pattern.
+Mix:        Mischt Kopier-Puffer und Pattern. Dabei hat der Puffer höhere
+            Priorität.
+Load Song:  Lädt einen BeatStomperIII-Song.
+Save Song:  Speichert einen BeatStomprIII-Song.
+L. Pattern: Lädt aktuelles Pattern.
+S. Pattern: Speichert aktuelle Pattern.
+L. Drumkit: Lädt ein Drumkit. Ein Drumkit enthält die Namen und die Klang-
+            Parameter der zehn Samples.
+S. Drumkit: Speicher ein Drumkit.
+About:      Gibt Programminformationen.
+Quit:       Beendet das Programm (mit Sicherheitsabfrage).
+Play Song:  Spielt den aktuellen Song ab. In der Titelzeile des Screens wird
+            angezeigt, welches Pattern gerade gespielt wird und wie oft. Durch
+            Drücken von rechter und linker Maustaste (gleichzeitig) bzw. der
+            mittleren wird der Song beendet. Ist der Song zu Ende, beginnt die
+            Soundausgabe von vorne.
+Erase Song: Löscht alle Pattern sowie den Inhalt des String-Gadgets (mit
+            Sicherheitsabfrage).
+E. Sample:  Löscht das aktuelle Sample.
+E. Samples: Löscht das gesamte Drumkit (mit Sicherheitsabfrage).
+L. Sample:  Lädt ein Sample für die aktuelle Drum. Das Sample kann sowohl im
+            IF- als auch im RAW-Format sein. Das Programm erkennt dies
+            automatisch.
+
+Mit den darüber liegenden Gadgets können Sie ein Pattern aufnehmem,
+abspielen, stoppen und unterbrechen. Die Symbole gleichen denen Ihres
+Kassetten-Rekorders. Wenn Sie Pause anwählen, stoppt das Pattern, bei
+nochmaligem Klick auf das selbe Gadget geht es weiter.
+Mit den Pfeil-Gadgets können Sie folgende Werte einstellen: Mit "Speed" können
+Sie die Geschwindigkeit in BPMs einstellen (von 40 bis 300 Taktschläge pro
+Minute). Mit "Len" stellen Sie die Länge des Pattern ein (von 1/4=8
+Einheiten bis 8/4=64 Einheiten). Mit "Quant" stellen Sie die Quatisierungs-
+Genauigkeit beim Einspielen ein (von 1/2 alle 16 Einheiten bis 1/32 jede
+Einheit).
+Mit den nun folgenden Toggle-Gadgets können Sie einige Einstellungen ändern:
+Mit "Filter" können sie den internen Amiga-Tiefpaß-Filter ein- u. ausschalten,
+mit "Workbench" die Workbench-Oberfläche. Mit "Metronome" können Sie
+entscheiden, ob Sie beim Aufnehmen eines Patterns ein Metronom benutzen wollen
+oder nicht. Das Metronom schlägt immer auf Kanal 4 und auf jeder Viertel.
+Die vier Gadgets mit Namen "1"-"4" dienen zum ein- bzw. auschalten des
+entsprechenden Sound-Kanals.
+Mit den Gadget "Sample A"-"Sample J" stellen Sie das aktuelle Sample ein.
+
+Wenn Sie in das Raster im oberen Bildschirmdrittel (hier wird das Pattern
+angezeigt) mit der linken Maustaste klicken, wird dort eine kleine Box
+gezeichnet, die angibt, zu welcher Zeit welcher Sound ertönt.Ein nochmaliger
+Klick setzt den Akzent. Der Akzent ist das selbe Sample, allerdings mit evtl.
+anderen Parametern. So können beispielsweise Stereo-Effekte mit ein und dem
+selben Sample erzielt werden (näheres s. u.). Mit rechter Maustaste  wird
+gelöscht.
+Mit den Tasten F1-F10 können Sie die Samples abspielen, mit ALT auch den
+Akzent.
+Durch drücken des entsprechenden Buchstabens auf der Tastatur wird das
+gewünschte Pattern angezeigt ("A" --> Pattern A usw.).
+
+WÄHREND SIE EIN PATTERN ABSPIELEN, IST DAS PROGRAMM VOLL BENUTZBAR. D.H.,
+SIE KÖNNEN WÄHREND DES ABSPIELENS DAS PATTERN ODER DIE GESCHWINDIGKEIT
+ÄNDERN USW.
+
+
+Der Aufbau eines Songs:
+
+Den Song gibt man mit Hilfe des String-Gadgets unten links ein.
+Ein Song ist folgendermaßen aufgebaut: nxnxnxnx... (max. 104 Zeichen)
+Beispiel: 2s8h1m6t
+n gibt an, wie oft ein Pattern gespielt werden soll. x ist der Name des
+Patterns.
+Anmerkungen: n muß größer als 0 sein und kleiner als 10 (also von 1-9). x
+muß a-z sein (nur Kleinbuchstaben).
+
+
+Sample-Parameter:
+
+Mit den in der rechten Ecke liegenden Gadgets lassen sich folgende Parameter
+des gerade aktuellen Samples einstellen:
+Schieberegler V: Lautstärke des Samples (unten=min./oben=max.)
+Schieberegler P: Tonhöhe (Pitch) des Samples
+Note: Bei dieser von MIDI empfangenen Note wird das Sample evtl. abgespielt.
+      Die Noten müssen folgendermaßen eingegeben werden:
+      c   <=> "C-1", "C-2" usw.
+      cis <=> "C#1", "C#2" usw.
+      h   <=> "B-1", "B-2" usw.
+      ges <=> "F#1", "F#2" usw.
+V max, V min: Erst wenn die von MIDI empfangene Note auch den entsprechenden
+              Velocity-Wert hat, wird das Sample abgespielt.
+    Beispiel: vmin=64, vmax=127, velocity=75 --> Sample wird abgespielt
+              vmin=1, vmax=63, velocity=75 --> Sample wird NICHT abgespielt
+              Damit lassen sich auf eine Keyboard-Taste alle Samples legen (je
+              nach Anschlagstärke anderer Klang).
+ACh: Amiga-Soundkanal, auf dem der Sound gespielt wird
+MCh: MIDI-Kanal, von dem gesendet werden muß (0=egal)
+Accent: Umschalten zwischen Normal- und "Akzent"-Klang-Parametern.
+
+
+MIDI-Funktionen:
+
+Das MIDI-Gadget hat nur Auswirkungen auf die MIDI-Synchronisation, nicht auf
+den Empfang von MIDI-NoteOn-Signalen beim Einspielen auf einem MIDI-Keyboard.
+Wenn das MIDI-Gadget aktiv ist, wird die Song-Ausgabe midi-synchronisiert.
+D.h., das Programm wartet, bis das START-Signal gesendet wird und beendet die
+Soundausgabe, wenn STOP gesendet wird. Eine Unterbrechung durch rechte u. linke
+bzw. mittlere Maustaste ist aber weiterhin möglich.
