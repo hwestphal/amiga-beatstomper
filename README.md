@@ -12,13 +12,14 @@ It is now available under a BSD style license.
 
 ## Building the programm
 
-BeatStomper III was (and still can be) built with [Aztec C](http://www.aztecmuseum.ca/) 5:
+BeatStomper III can be built with [vbcc](http://sun.hasenbraten.de/vbcc/) under the cross-development environment provided by the [M68K AmigaOS Toolchain](https://github.com/cahirwpz/m68k-amigaos-toolchain) of Krystian Baclawski.
 
-    > cc -so -wn -wo bs.c
-    > cc -so -wn midi.c
-    > ln +cd bs.o midi.o -lc
+To simplify the setup a [Vagrantfile](http://www.vagrantup.com/) is provided for setting up the environment:
 
-In branch [`vbcc`](https://github.com/hwestphal/amiga-beatstomper/tree/vbcc) a version is provided which can be built using a Linux/i386 based cross-development environment.
+    $ vagrant up
+    $ vagrant ssh
+    > cd /vagrant
+    > make
 
 
 ## Running the program

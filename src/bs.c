@@ -10,19 +10,24 @@ Redistribution and use in source and binary forms, with or without modification,
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <exec/types.h>
-#include <exec/memory.h>
+#include <proto/exec.h>
 #include <exec/interrupts.h>
 #include <hardware/custom.h>
 #include <hardware/cia.h>
-#include <libraries/dosextens.h>
-#include <graphics/gfx.h>
-#include <graphics/sprite.h>
-#include <intuition/intuition.h>
-#include <intuition/gadgetclass.h>
-#include <libraries/gadtools.h>
-#include <libraries/asl.h>
+#include <proto/dos.h>
+#include <proto/graphics.h>
+#include <proto/intuition.h>
+#include <proto/gadtools.h>
+#include <proto/asl.h>
 #include "midi.h"
+
+#include <stdio.h>
+#include <string.h>
+#undef NULL
+#define NULL (0)
+
+struct Interrupt *AddICRVector(__reg("a6") APTR resource,__reg("d0") long iCRBit,__reg("a1") struct Interrupt *interrupt)="\tjsr\t-6(a6)";
+void RemICRVector(__reg("a6") APTR resource,__reg("d0") long iCRBit,__reg("a1") struct Interrupt *interrupt)="\tjsr\t-12(a6)";
 
 #define ANZ_GAD 35
 #define TB (rp->TxBaseline)
@@ -55,7 +60,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #define MODE_MINUS 3
 #define MODE_FORCE 4
 
-void InputInt(void);
+__amigainterrupt void InputInt(void);
 void MidiInput(void);
 void PlaySound(short);
 void Record(short);
@@ -75,8 +80,8 @@ void GadgetsAus(void);
 void GadgetsAn(void);
 void PlaySong(void);
 void PlaySongMidi(void);
-void PlayPatInt(void);
-void PlaySongInt(void);
+__amigainterrupt void PlayPatInt(void);
+__amigainterrupt void PlaySongInt(void);
 void PlaySongIntMidi(void);
 void EraseSong(void);
 void EraseSample(short);
@@ -116,7 +121,7 @@ struct SampleData
 	short mch;
 	};
 
-UWORD display[5304] =
+__chip UWORD display[5304] =
 	{
 	/* Plane 0 */
 	0,3072,0,0,0,3072,0,0,0,3072,0,0,0,3072,0,0,0,3072,0,0,0,3072,0,0,0,3072,0,0,0,3072,0,0,0,0,
@@ -280,7 +285,7 @@ UWORD display[5304] =
 
 struct Image displayim = { 0,0,533,78,2,&display[0],0xff,0x0,NULL };
 
-UWORD box[3][8] =
+__chip UWORD box[3][8] =
 	{{ 0,0,0,0,0,0,0,0 },
 	{ 0,0,0,0,61440,61440,61440,61440 },
 	{ 61440,61440,61440,61440,61440,61440,61440,61440 }};
@@ -290,7 +295,7 @@ struct Image boxim[3] =
 	{ 0,0,4,4,2,&box[1][0],0xff,0x0,NULL },
 	{ 0,0,4,4,2,&box[2][0],0xff,0x0,NULL }};
 
-UWORD metro1[168] =
+__chip UWORD metro1[168] =
 	{
 	/* Plane 0 */
 	0,0,256,0,0,768,2047,~0,58112,2047,~0,58112,0,6144,768,0,6144,768,0,6144,768,
@@ -304,7 +309,7 @@ UWORD metro1[168] =
 	49152,65280,0,49152,65280,0,49152,0,0,49152,0,0,32768,0,0
 	};
 
-UWORD metro2[168] =
+__chip UWORD metro2[168] =
 	{
 	/* Plane 0 */
 	0,0,256,0,0,768,2047,~0,58112,2047,~0,58112,0,6144,768,0,12288,768,0,12288,768,
@@ -318,7 +323,7 @@ UWORD metro2[168] =
 	65408,0,0,65280,0,0,49152,0,0,49152,0,0,32768,0,0
 	};
 
-UWORD metro3[168] =
+__chip UWORD metro3[168] =
 	{
 	/* Plane 0 */
 	0,0,256,0,0,768,2047,~0,58112,2047,~0,58112,0,6144,768,0,3072,768,0,3072,768,
@@ -338,7 +343,7 @@ struct Image metroim[4] =
 	{ 0,0,40,28,2,&metro3[0],0xff,0x0,NULL },
 	{ 0,0,40,28,2,&metro1[0],0xff,0x0,NULL }};
 
-UWORD metrosnd[] =
+__chip UWORD metrosnd[] =
   { 0x07D0,0x3C28,0x06ED,0x393F,0x3412,0xD5C2,0xB2B3,0xD9E2,0xFB5E,0x5380,0x4F2F,0xF9E8,0xB98D,0x8181,0x9DF4,0x224B,0x5C67,0x8080,0x6818,0xB9B0,0x818E,0x8190,0xC5F8,0x3159,0x7180,0x8062,0x25EB,0xAA9F,0x8498,0x9EE1,0xE529,0x4565,0x7341,0x35DF,0xE5AF,
   0xE3D0,0xE7F6,0xF123,0x1C57,0x3D12,0xE7B6,0xBFC3,0xECF7,0x141F,0x343E,0x4641,0xF915,0xDDAC,0xA89F,0xD7E4,0x4423,0x5726,0x3C2E,0x151E,0xE1B6,0x9CB8,0xCE01,0x1432,0x3547,0x412B,0x15E7,0xCBC4,0xBACC,0xE610,0x1C46,0x223E,0x3836,0x1BEE,0xD9AE,0xCCD4,0x0D0E,
   0x3D37,0x254F,0x1F30,0xF5EC,0xB0BE,0xB0D9,0x000D,0x3440,0x3556,0x3525,0xF4CC,0xB9BC,0xC3DF,0xF60A,0x3342,0x3D51,0x2E22,0x00E1,0xC2CD,0xC9D6,0xF00F,0x1D25,0x2B38,0x3B14,0x09D0,0xCAC4,0xC9DF,0xE315,0x132F,0x4734,0x2C11,0x15C3,0xE6B7,0xBDD8,0xD00E,0x1539,
@@ -365,7 +370,7 @@ UWORD metrosnd[] =
   0x0904,0xFFF5,0xF8F0,0xF1F6,0xFA01,0x0A0B,0x0E10,0x1007,0xF8F3,0xF1FE,0xFD02,0x00FE,0x0A12,0x100F,0x07FD,0xF9FA,0xFBFA,0xFE01,0x0205,0x0B05,0x090B,0x0702,0x00F8,0xF3FA,0xFD02,0x0501,0x0A04,0x0806,0x03FD,0xFAF8,0xFCFF,0x0304,0x040C,0xFF05,0x0C09,0xFEF9,
   0xFDFA,0xFF05,0xF6FE };
 
-UWORD busyptr[] =
+__chip UWORD busyptr[] =
 	{ 0,0,
 	0x0400,0x07C0,0x0000,0x07C0,0x0100,0x0380,0x0000,0x07E0,
 	0x07C0,0x1FF8,0x1FF0,0x3FEC,0x3FF8,0x7FDE,0x3FF8,0x7FBE,
@@ -373,7 +378,7 @@ UWORD busyptr[] =
 	0x3FF8,0x7FFE,0x1FF0,0x3FFC,0x07C0,0x1FF8,0x0000,0x07E0,
 	0,0 };
 
-UWORD cursor[] =
+__chip UWORD cursor[] =
 	{ 0,0,
 	0xF000,0x0000,0x9000,0x0000,0x9000,0x0000,0x9000,0x0000,0x9000,0x0000,
 	0x9000,0x0000,0x9000,0x0000,0x9000,0x0000,0x9000,0x0000,0x9000,0x0000,
@@ -410,7 +415,7 @@ struct IntuiText PosText =
 struct IntuiText NegText =
 	{ 4,1,JAM1,6,3,NULL,"No",NULL };
 
-UWORD record[78] =
+__chip UWORD record[78] =
 	{
 	/* Plane 0 */
 	0,0,512,0,0,1536,1,65280,1536,15,65504,1536,31,65520,1536,63,65528,1536,
@@ -423,7 +428,7 @@ UWORD record[78] =
 
 struct Image recordim = { 0,0,39,13,2,&record[0],0xff,0x0,NULL };
 
-UWORD play[78] =
+__chip UWORD play[78] =
 	{
 	/* Plane 0 */
 	0,0,512,0,0,1536,3840,0,1536,4095,0,1536,4095,65024,1536,4095,65534,1536,
@@ -436,7 +441,7 @@ UWORD play[78] =
 
 struct Image playim = { 0,0,39,13,2,&play[0],0xff,0x0,NULL };
 
-UWORD stop[78] =
+__chip UWORD stop[78] =
 	{
 	/* Plane 0 */
 	0,0,512,0,0,1536,63,65528,1536,48,24,1536,48,24,1536,48,24,1536,48,24,1536,
@@ -448,7 +453,7 @@ UWORD stop[78] =
 
 struct Image stopim = { 0,0,39,13,2,&stop[0],0xff,0x0,NULL };
 
-UWORD pause[78] =
+__chip UWORD pause[78] =
 	{
 	/* Plane 0 */
 	0,0,512,0,0,1536,63,61432,1536,48,27672,1536,48,27672,1536,48,27672,1536,
@@ -461,7 +466,7 @@ UWORD pause[78] =
 
 struct Image pauseim = { 0,0,39,13,2,&pause[0],0xff,0x0,NULL };
 
-UWORD pfdown[24] =
+__chip UWORD pfdown[24] =
 	{
 	/* Plane 0 */
 	2,6,902,902,902,902,4070,1990,902,262,6,32766,
@@ -471,7 +476,7 @@ UWORD pfdown[24] =
 
 struct Image pfdownim = { 0,0,15,12,2,&pfdown[0],0xff,0x0,NULL };
 
-UWORD pfup[24] =
+__chip UWORD pfup[24] =
 	{
 	/* Plane 0 */
 	2,6,262,902,1990,4070,902,902,902,902,6,32766,
@@ -558,7 +563,11 @@ struct NewScreen NewScreen =
 
 UWORD Pens_3D=-1;
 
-APTR GfxBase,IntuitionBase,GadToolsBase,AslBase,CIABBase;
+struct GfxBase *GfxBase;
+struct IntuitionBase *IntuitionBase;
+struct Library *GadToolsBase;
+struct Library *AslBase;
+APTR CIABBase;
 struct Screen *screen=NULL;
 struct Window *window=NULL;
 struct RastPort *rp;
@@ -757,16 +766,15 @@ main()
 		} /* while */
 	}
 
-void InputInt()
+__amigainterrupt void InputInt()
 	{
 	/* ALT_L:55 ALT_R:53 SHIFT_L:63 SHIFT_R:61 */
-	int_start();
 	if (KEYBOARD==95)
 		{
 		if (KeyNr!=1+alt_key*10)
 			{
 			SNr=KeyNr=1+alt_key*10;
-			Signal(Process,1<<SigNr);
+			Signal((struct Task *)Process,1<<SigNr);
 			}
 		}
 	else
@@ -775,7 +783,7 @@ void InputInt()
 		if (KeyNr!=2+alt_key*10)
 			{
 			SNr=KeyNr=2+alt_key*10;
-			Signal(Process,1<<SigNr);
+			Signal((struct Task *)Process,1<<SigNr);
 			}
 		}
 	else
@@ -784,7 +792,7 @@ void InputInt()
 		if (KeyNr!=3+alt_key*10)
 			{
 			SNr=KeyNr=3+alt_key*10;
-			Signal(Process,1<<SigNr);
+			Signal((struct Task *)Process,1<<SigNr);
 			}
 		}
 	else
@@ -793,7 +801,7 @@ void InputInt()
 		if (KeyNr!=4+alt_key*10)
 			{
 			SNr=KeyNr=4+alt_key*10;
-			Signal(Process,1<<SigNr);
+			Signal((struct Task *)Process,1<<SigNr);
 			}
 		}
 	else
@@ -802,7 +810,7 @@ void InputInt()
 		if (KeyNr!=5+alt_key*10)
 			{
 			SNr=KeyNr=5+alt_key*10;
-			Signal(Process,1<<SigNr);
+			Signal((struct Task *)Process,1<<SigNr);
 			}
 		}
 	else
@@ -811,7 +819,7 @@ void InputInt()
 		if (KeyNr!=6+alt_key*10)
 			{
 			SNr=KeyNr=6+alt_key*10;
-			Signal(Process,1<<SigNr);
+			Signal((struct Task *)Process,1<<SigNr);
 			}
 		}
 	else
@@ -820,7 +828,7 @@ void InputInt()
 		if (KeyNr!=7+alt_key*10)
 			{
 			SNr=KeyNr=7+alt_key*10;
-			Signal(Process,1<<SigNr);
+			Signal((struct Task *)Process,1<<SigNr);
 			}
 		}
 	else
@@ -829,7 +837,7 @@ void InputInt()
 		if (KeyNr!=8+alt_key*10)
 			{
 			SNr=KeyNr=8+alt_key*10;
-			Signal(Process,1<<SigNr);
+			Signal((struct Task *)Process,1<<SigNr);
 			}
 		}
 	else
@@ -838,7 +846,7 @@ void InputInt()
 		if (KeyNr!=9+alt_key*10)
 			{
 			SNr=KeyNr=9+alt_key*10;
-			Signal(Process,1<<SigNr);
+			Signal((struct Task *)Process,1<<SigNr);
 			}
 		}
 	else
@@ -847,7 +855,7 @@ void InputInt()
 		if (KeyNr!=10+alt_key*10)
 			{
 			SNr=KeyNr=10+alt_key*10;
-			Signal(Process,1<<SigNr);
+			Signal((struct Task *)Process,1<<SigNr);
 			}
 		}
 	else
@@ -856,12 +864,10 @@ void InputInt()
 	if (KEYBOARD==54 || KEYBOARD==52) alt_key=0;
 	else
 		KeyNr=-1;
-	int_end();
 	}
 
 void MidiInput()
 	{
-	geta4();
 	while (1)
 		{
 		if (((midi_v1=midimayget())&0xf0)==0x90)
@@ -877,7 +883,7 @@ void MidiInput()
 						if (!SmpData[midi_i].mch || SmpData[midi_i].mch==midi_v1)
 							{
 							SNr=midi_i;
-							Signal(Process,1<<SigNr);
+							Signal((struct Task *)Process,1<<SigNr);
 							break;
 							}
 					}
@@ -886,6 +892,14 @@ void MidiInput()
 		/**((short *)0xdff180)=rand();*/
 		}
 	}
+
+void dma_wait()="\
+	moveq	#4,d1\n\
+.A	move.b	$dff006,d0\n\
+.B	cmp.b	$dff006,d0\n\
+	beq.s	.B\n\
+	dbf		d1,.A\n\
+";
 
 void PlaySound(short n) /* BeatStomper V4.0!!! */
   {
@@ -908,15 +922,9 @@ void PlaySound(short n) /* BeatStomper V4.0!!! */
 	 }
   *(dmabaseWORD+0x09e/2)=0x00ff;
   *(dmabaseWORD+0x096/2)=0x820f;
-  /*for (i=0;i<100;i++);*/
-	;
-#asm
-	moveq 	#4,d1
-.A move.b	$dff006,d0
-.B cmp.b 	$dff006,d0
-	beq.s 	.B
-	dbf		d1,.A
-#endasm
+
+  dma_wait();
+  
   for (i=0;i<4;i++)
 	 {
 	 *(dmabaseLONG+(16*i+0x0a0)/4)=(ULONG)SmpAdr[0];
@@ -1395,9 +1403,8 @@ Break:
 		ErrorMsg("Song buffer empty!");
 	}
 
-void PlayPatInt()
+__amigainterrupt void PlayPatInt()
 	{
-	int_start();
 	if (sp_i1<2) { sp_i1++; goto Break; }
 	sp_i1=0;
 	MoveSprite(&screen->ViewPort,&sprite,pos_i1*8+16,22);
@@ -1423,7 +1430,7 @@ void PlayPatInt()
 		{
 		AktMetro=c_i1++;
 		c_i1%=4;
-		Signal(Process,1<<MSigNr);
+		Signal((struct Task *)Process,1<<MSigNr);
 		if (!(pos_i1%8))
 			{
 			custom.dmacon=0x0008;
@@ -1444,12 +1451,10 @@ void PlayPatInt()
 	pos_i1++;
 	if (pos_i1==length[AktPat]) pos_i1=0;
 Break:
-	int_end();
 	}
 
-void PlaySongInt()
+__amigainterrupt void PlaySongInt()
 	{
-	int_start();
 	if (!songbuf[c_i2]) { c_i2=0; goto Break; }
 	pat_i2=songbuf[c_i2+1]-97;
 	cou_i2=songbuf[c_i2]-48;
@@ -1485,7 +1490,6 @@ void PlaySongInt()
 	if (pos_i2==length[pat_i2]) { pos_i2=0; ccou_i2++; }
 	if (ccou_i2==cou_i2) { c_i2+=2; ccou_i2=0; }
 Break:
-	int_end();
 	}
 
 void PlaySongIntMidi()
@@ -1847,9 +1851,9 @@ void OpenAll()
 	{
 	int i,n=36;
 	struct Gadget *gad;
-	if (!(GfxBase=OpenLibrary("graphics.library",37))) exit(100);
+	if (!(GfxBase=(struct GfxBase *)OpenLibrary("graphics.library",37))) exit(100);
 	if (!midiopen()) exit(200);
-	IntuitionBase=OpenLibrary("intuition.library",0);
+	IntuitionBase=(struct IntuitionBase *)OpenLibrary("intuition.library",0);
 	GadToolsBase=OpenLibrary("gadtools.library",0);
 	CIABBase=OpenResource("ciab.resource");
 	if (!(AslBase=OpenLibrary("asl.library",0)))
@@ -1953,7 +1957,7 @@ void OpenAll()
 	SigNr=AllocSignal(-1);
 	MSigNr=AllocSignal(-1);
 	AddIntServer(5,&InputInterrupt);
-	MidiTask=CreateTask("BSMidiTask",-5,MidiInput,1024);
+	MidiTask=(struct Task *)CreateTask("BSMidiTask",-5,MidiInput,1024);
 	LEDOFF;
 	}
 
@@ -1981,10 +1985,7 @@ void CloseAll()
 		}
 	if (AslBase) CloseLibrary(AslBase);
 	CloseLibrary(GadToolsBase);
-	CloseLibrary(IntuitionBase);
-	CloseLibrary(GfxBase);
+	CloseLibrary((struct Library *)IntuitionBase);
+	CloseLibrary((struct Library *)GfxBase);
 	midiclose();
 	}
-
-void _cli_parse() {}
-void _wb_parse() {}
